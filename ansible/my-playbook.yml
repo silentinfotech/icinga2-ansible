@@ -72,6 +72,7 @@
    - name: Installing icigna2 web
      apt: name={{ item }} state=latest
      with_items:
+        - apache2
         - php-intl
         - icingaweb2
         - php-dom
