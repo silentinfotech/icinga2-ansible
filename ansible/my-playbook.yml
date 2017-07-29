@@ -82,7 +82,7 @@
         - icinga2-ido-pgsql
 
    - lineinfile:
-        dest: /etc/php/7.0/apache2/php.ini
+        dest: /etc/php/7.0/fpm/php.ini
         line: "date.timezone = Asia/Kolkata"
 
 
