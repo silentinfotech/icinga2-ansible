@@ -38,6 +38,9 @@
 
    - pip:
       name: psycopg2
+  
+   - pip:
+      name: mysqldb
 
    - name: Create MySql docker container
      docker:
@@ -80,11 +83,10 @@
         - php-imagick
         - php-pgsql
         - postgresql 
-        - icinga2-ido-pgsql
         - libapache2-mod-php
 
    - lineinfile:
-        dest: /etc/php/7.0/fpm/php.ini
+        dest: /etc/php/7.0/apache2/php.ini
         line: "date.timezone = Asia/Kolkata"
 
 
@@ -92,29 +94,16 @@
         name: apache2
         state: restarted
 
-   - name: Create postgres role and users
-     command:  "psql -c \"CREATE ROLE icinga WITH LOGIN PASSWORD 'icinga'\""
-     become_user: postgres
-     ignore_errors: yes
+   - name: Installing the IDO modules for MySQL
+     apt: name={{ item }}
+     with_items:
+         - mysql-server 
+         - mysql-client
+         - icinga2-ido-mysql
+         - php-mysql
 
-   - name: Create database
-     command: "createdb -O icinga -E UTF8 icinga"
-     become_user: postgres
-     ignore_errors: yes
-    
-   - name: adding icinga user to login using password    
-     blockinfile:
-        dest: /etc/postgresql/9.5/main/pg_hba.conf
-        insertafter: "# Put your actual configuration her"
-        content: |
-          local   icinga      icinga                            md5
-          host    icinga      icinga      127.0.0.1/32          md5
-          host    icinga      icinga      ::1/128               md5
+   - name: icinga2 feature enable
+     command: icinga2 feature enable ido-mysql
 
-   - name: Import blank database
-     become_user: icinga
-     command: "psql icinga < /usr/share/icinga2-ido-pgsql/schema/pgsql.sql"
 
-   - name: enable feature
-     command: icinga2 feature enable ido-pgsql
 
