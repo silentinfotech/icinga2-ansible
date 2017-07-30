@@ -38,7 +38,7 @@
 
    - pip:
       name: psycopg2
-
+  
    - name: Create MySql docker container
      docker:
          name: mysql
@@ -78,43 +78,43 @@
         - icingaweb2
         - php-dom
         - php-imagick
-        - php-pgsql
-        - postgresql 
-        - icinga2-ido-pgsql
         - libapache2-mod-php
 
    - lineinfile:
-        dest: /etc/php/7.0/fpm/php.ini
+        dest: /etc/php/7.0/apache2/php.ini
         line: "date.timezone = Asia/Kolkata"
 
+   - name: Installing the IDO modules for MySQL
+     apt: name={{ item }}
+     with_items:
+         - mysql-server 
+         - mysql-client
+         - icinga2-ido-mysql
+         - php-mysql
 
    - service:
         name: apache2
         state: restarted
 
-   - name: Create postgres role and users
-     command:  "psql -c \"CREATE ROLE icinga WITH LOGIN PASSWORD 'icinga'\""
-     become_user: postgres
+   - name: icinga2 feature enable
+     command: icinga2 feature enable ido-mysql
+   
+   - name: creating new user icinga
+     command: mysql -u root -e "CREATE USER 'icinga'@'localhost' IDENTIFIED BY 'silent'";
      ignore_errors: yes
 
-   - name: Create database
-     command: "createdb -O icinga -E UTF8 icinga"
-     become_user: postgres
+   - name: Setting privileges
+     command: mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO 'icinga'@'localhost'";
      ignore_errors: yes
-    
-   - name: adding icinga user to login using password    
-     blockinfile:
-        dest: /etc/postgresql/9.5/main/pg_hba.conf
-        insertafter: "# Put your actual configuration her"
-        content: |
-          local   icinga      icinga                            md5
-          host    icinga      icinga      127.0.0.1/32          md5
-          host    icinga      icinga      ::1/128               md5
+  
+   - name: icinga2 configuration
+     copy: src=./icigna2-conf/ dest=/etc/icinga2/conf.d/
 
-   - name: Import blank database
-     become_user: icinga
-     command: "psql icinga < /usr/share/icinga2-ido-pgsql/schema/pgsql.sql"
+   - command: rm -rf /etc/icinga2/conf.d/hosts.conf
 
-   - name: enable feature
-     command: icinga2 feature enable ido-pgsql
+   - service:
+        name: icinga2
+        state: restarted
+
+
 
