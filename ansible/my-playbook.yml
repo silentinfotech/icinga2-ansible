@@ -101,9 +101,14 @@
    
    - name: creating new user icinga
      command: mysql -u root -e "CREATE USER 'icinga'@'localhost' IDENTIFIED BY 'silent'";
+     ignore_errors: yes
 
    - name: Setting privileges
      command: mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO 'icinga'@'localhost'";
+     ignore_errors: yes
+  
+   - name: icinga2 configuration
+     copy: src=./icigna2-conf/ dest=/etc/icinga2/conf.d/
 
    - service:
         name: icinga2
