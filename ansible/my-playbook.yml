@@ -110,6 +110,8 @@
    - name: icinga2 configuration
      copy: src=./icigna2-conf/ dest=/etc/icinga2/conf.d/
 
+   - command: rm -rf /etc/icinga2/conf.d/hosts.conf
+
    - service:
         name: icinga2
         state: restarted
