@@ -39,9 +39,6 @@
    - pip:
       name: psycopg2
   
-   - pip:
-      name: mysqldb
-
    - name: Create MySql docker container
      docker:
          name: mysql
@@ -81,18 +78,11 @@
         - icingaweb2
         - php-dom
         - php-imagick
-        - php-pgsql
-        - postgresql 
         - libapache2-mod-php
 
    - lineinfile:
         dest: /etc/php/7.0/apache2/php.ini
         line: "date.timezone = Asia/Kolkata"
-
-
-   - service:
-        name: apache2
-        state: restarted
 
    - name: Installing the IDO modules for MySQL
      apt: name={{ item }}
@@ -102,8 +92,22 @@
          - icinga2-ido-mysql
          - php-mysql
 
+   - service:
+        name: apache2
+        state: restarted
+
    - name: icinga2 feature enable
      command: icinga2 feature enable ido-mysql
+   
+   - name: creating new user icinga
+     command: mysql -u root -e "CREATE USER 'icinga'@'localhost' IDENTIFIED BY 'silent'";
+
+   - name: Setting privileges
+     command: mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO 'icinga'@'localhost'";
+
+   - service:
+        name: icinga2
+        state: restarted
 
 
 
